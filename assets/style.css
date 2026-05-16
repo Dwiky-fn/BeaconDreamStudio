@@ -1,0 +1,29 @@
+body {
+  background: #0d0f14;
+  color: white;
+}
+
+.brand {
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.page-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.page-sub {
+  color: gray;
+}
+
+.stat-row {
+  display: flex;
+  gap: 12px;
+}
+
+.stat-box {
+  padding: 12px;
+  border-radius: 10px;
+  background: #1e2332;
+}
