@@ -1,7 +1,4 @@
-# components/waveform.py
-
 import base64
-
 
 def waveform_editor(audio_bytes, audio_fmt, duration_sec):
 

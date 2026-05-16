@@ -1,14 +1,14 @@
 import streamlit as st
 from pathlib import Path
-from pages.history import page_history
+from app_pages.history import page_history
 
 # import pages
-from pages.trim_audio import page_trim
-from pages.coming_soon import page_coming_soon
-from pages.video_to_mp3 import page_video_to_mp3
-from pages.audio_converter import page_audio_converter
-from pages.frame_extractor import page_frame_extractor
-from pages.youtube_downloader import page_youtube_downloader
+from app_pages.trim_audio import page_trim
+from app_pages.coming_soon import page_coming_soon
+from app_pages.video_to_mp3 import page_video_to_mp3
+from app_pages.audio_converter import page_audio_converter
+from app_pages.frame_extractor import page_frame_extractor
+from app_pages.youtube_downloader import page_youtube_downloader
 
 # PAGE CONFIG
 st.set_page_config(

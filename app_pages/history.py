@@ -1,11 +1,8 @@
-# pages/history.py
-
 import streamlit as st
 
 from utils.history_manager import (
     load_history
 )
-
 
 def page_history():
 
@@ -37,7 +34,7 @@ def page_history():
 
         st.markdown(f"""
         <div class="stat-box"
-             style="margin-bottom:12px">
+            style="margin-bottom:12px">
 
             <div class="stat-label">
                 {item["tool"]}
