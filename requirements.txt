@@ -1,5 +1,8 @@
 streamlit
 moviepy
-opencv-python
+opencv-python-headless
 pydub
 yt-dlp
+numpy
+imageio
+imageio-ffmpeg
