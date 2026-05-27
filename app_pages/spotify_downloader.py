@@ -12,20 +12,14 @@ import os
 
 load_dotenv()
 
-SPOTIFY_CLIENT_ID = st.secrets[
-    "SPOTIFY_CLIENT_ID"
-]
-
-SPOTIFY_CLIENT_SECRET = st.secrets[
-    "SPOTIFY_CLIENT_SECRET"
-]
-
-SPOTIFY_CLIENT_ID = os.getenv(
-    "SPOTIFY_CLIENT_ID"
+SPOTIFY_CLIENT_ID = (
+    st.secrets.get("SPOTIFY_CLIENT_ID")
+    or os.getenv("SPOTIFY_CLIENT_ID")
 )
 
-SPOTIFY_CLIENT_SECRET = os.getenv(
-    "SPOTIFY_CLIENT_SECRET"
+SPOTIFY_CLIENT_SECRET = (
+    st.secrets.get("SPOTIFY_CLIENT_SECRET")
+    or os.getenv("SPOTIFY_CLIENT_SECRET")
 )
 
 def get_spotify_track(url):
