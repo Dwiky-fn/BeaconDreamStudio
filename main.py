@@ -9,7 +9,6 @@ from app_pages.video_to_mp3 import page_video_to_mp3
 from app_pages.audio_converter import page_audio_converter
 from app_pages.frame_extractor import page_frame_extractor
 from app_pages.youtube_downloader import page_youtube_downloader
-from app_pages.spotify_downloader import page_spotify_downloader
 
 # PAGE CONFIG
 st.set_page_config(
@@ -39,7 +38,6 @@ MENUS = [
     "Audio Converter",
     "Frame Extractor",
     "YouTube Downloader",
-    "Spotify Downloader",
     # "History",
 ]
 
@@ -49,7 +47,6 @@ ICONS = {
     "Audio Converter": "🔄",
     "Frame Extractor": "🎞️",
     "YouTube Downloader": "📥",
-    "Spotify Downloader": "🎵",
     "History": "🕘",
 }
 
@@ -91,9 +88,6 @@ elif selected == "Frame Extractor":
 
 elif selected == "YouTube Downloader":
     page_youtube_downloader()
-
-elif selected == "Spotify Downloader":
-    page_spotify_downloader()
 
 elif selected == "History":
     page_history()
