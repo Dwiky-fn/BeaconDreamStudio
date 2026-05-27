@@ -1,70 +1,73 @@
 from pathlib import Path
 import tempfile
+import requests
 
 import streamlit as st
-import spotipy
-
-from spotipy.oauth2 import SpotifyClientCredentials
 from yt_dlp import YoutubeDL
 
-from dotenv import load_dotenv
-import os
+from utils.history_manager import add_history
 
-load_dotenv()
 
-try:
+def get_spotify_metadata(url):
 
-    SPOTIFY_CLIENT_ID = st.secrets[
-        "SPOTIFY_CLIENT_ID"
-    ]
-
-    SPOTIFY_CLIENT_SECRET = st.secrets[
-        "SPOTIFY_CLIENT_SECRET"
-    ]
-
-except Exception:
-
-    SPOTIFY_CLIENT_ID = os.getenv(
-        "SPOTIFY_CLIENT_ID"
+    endpoint = (
+        "https://open.spotify.com/oembed"
     )
 
-    SPOTIFY_CLIENT_SECRET = os.getenv(
-        "SPOTIFY_CLIENT_SECRET"
+    response = requests.get(
+        endpoint,
+        params={"url": url}
     )
 
-def get_spotify_track(url):
+    if response.status_code != 200:
 
-    auth_manager = SpotifyClientCredentials(
-        client_id=SPOTIFY_CLIENT_ID,
-        client_secret=SPOTIFY_CLIENT_SECRET
-    )
+        raise Exception(
+            "Gagal mengambil metadata Spotify."
+        )
 
-    sp = spotipy.Spotify(
-        auth_manager=auth_manager
-    )
+    data = response.json()
 
-    track = sp.track(url)
-
-    title = track["name"]
-
-    artist = track["artists"][0]["name"]
-
-    return f"{title} {artist}"
+    return {
+        "title": data.get("title"),
+        "artist": data.get("author_name"),
+        "thumbnail": data.get("thumbnail_url")
+    }
 
 
 def download_mp3(query, output_dir):
 
     ydl_opts = {
+
+        # AUDIO FORMAT
         "format": "bestaudio/best",
+
+        # OUTPUT
         "outtmpl": str(
             output_dir / "%(title)s.%(ext)s"
         ),
+
+        # SEARCH
+        "default_search": "ytsearch1",
+
+        # BETTER CLOUD SUPPORT
+        "quiet": True,
+        "noplaylist": True,
+        "geo_bypass": True,
+        "nocheckcertificate": True,
+
+        # YOUTUBE FIX
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android"]
+            }
+        },
+
+        # MP3 CONVERT
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
             "preferredcodec": "mp3",
             "preferredquality": "192",
-        }],
-        "default_search": "ytsearch1"
+        }]
     }
 
     with YoutubeDL(ydl_opts) as ydl:
@@ -74,9 +77,30 @@ def download_mp3(query, output_dir):
             download=True
         )
 
-        title = info["entries"][0]["title"]
+        if "entries" in info:
 
-    return title
+            video_info = info["entries"][0]
+
+        else:
+
+            video_info = info
+
+        return {
+            "title": video_info.get("title"),
+            "duration": video_info.get("duration"),
+            "uploader": video_info.get("uploader")
+        }
+
+
+def format_duration(seconds):
+
+    if not seconds:
+        return "Unknown"
+
+    minutes = seconds // 60
+    seconds = seconds % 60
+
+    return f"{minutes}:{seconds:02d}"
 
 
 def page_spotify_downloader():
@@ -90,19 +114,66 @@ def page_spotify_downloader():
 
     st.markdown(
         '<div class="page-sub">'
-        'Download lagu Spotify sebagai MP3.'
+        'Download lagu Spotify menjadi MP3.'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    # URL INPUT
+    st.markdown(
+        '<div class="card-title">'
+        '① Spotify URL'
         '</div>',
         unsafe_allow_html=True
     )
 
     url = st.text_input(
         "Spotify URL",
-        placeholder="https://open.spotify.com/track/..."
+        placeholder=(
+            "https://open.spotify.com/track/..."
+        )
     )
 
     if not url:
         return
 
+    st.markdown("---")
+
+    # GET SPOTIFY METADATA
+    try:
+
+        metadata = get_spotify_metadata(url)
+
+        title = metadata["title"]
+        artist = metadata["artist"]
+        thumbnail = metadata["thumbnail"]
+
+        # COVER
+        st.image(
+            thumbnail,
+            width=260
+        )
+
+        # SONG INFO
+        st.markdown(
+            f"### 🎵 {title}"
+        )
+
+        st.markdown(
+            f"👤 {artist}"
+        )
+
+    except Exception as e:
+
+        st.error(
+            f"Gagal mengambil metadata: {e}"
+        )
+
+        return
+
+    st.markdown("---")
+
+    # DOWNLOAD BUTTON
     if st.button(
         "⬇️ Download MP3",
         use_container_width=True
@@ -114,25 +185,20 @@ def page_spotify_downloader():
 
             try:
 
-                with st.spinner(
-                    "Mengambil metadata Spotify..."
-                ):
-
-                    query = get_spotify_track(url)
-
-                st.info(
-                    f"🎵 Ditemukan: {query}"
+                query = (
+                    f"{title} {artist}"
                 )
 
                 with st.spinner(
-                    "Mencari di YouTube..."
+                    "Mencari lagu di YouTube..."
                 ):
 
-                    download_mp3(
+                    yt_info = download_mp3(
                         query,
                         temp_dir
                     )
 
+                # FIND MP3
                 files = list(
                     temp_dir.glob("*.mp3")
                 )
@@ -147,18 +213,78 @@ def page_spotify_downloader():
 
                 file_path = files[0]
 
+                # AUDIO INFO
+                st.markdown("---")
+
+                st.markdown(
+                    '<div class="card-title">'
+                    '② Informasi Lagu'
+                    '</div>',
+                    unsafe_allow_html=True
+                )
+
+                st.markdown(f"""
+                <div class="stat-row">
+
+                    <div class="stat-box">
+                        <div class="stat-label">
+                            Judul
+                        </div>
+
+                        <div class="stat-value">
+                            {yt_info["title"]}
+                        </div>
+                    </div>
+
+                    <div class="stat-box">
+                        <div class="stat-label">
+                            Channel
+                        </div>
+
+                        <div class="stat-value">
+                            {yt_info["uploader"]}
+                        </div>
+                    </div>
+
+                    <div class="stat-box">
+                        <div class="stat-label">
+                            Durasi
+                        </div>
+
+                        <div class="stat-value">
+                            {format_duration(
+                                yt_info["duration"]
+                            )}
+                        </div>
+                    </div>
+
+                </div>
+                """, unsafe_allow_html=True)
+
+                # READ AUDIO
                 with open(file_path, "rb") as f:
+
                     audio_bytes = f.read()
 
                 st.success(
                     "✅ Lagu berhasil didownload!"
                 )
 
+                # HISTORY
+                add_history(
+                    tool="Spotify Downloader",
+                    input_file=url,
+                    output_file=file_path.name,
+                    details=title
+                )
+
+                # AUDIO PLAYER
                 st.audio(
                     audio_bytes,
                     format="audio/mp3"
                 )
 
+                # DOWNLOAD BUTTON
                 st.download_button(
                     label="⬇️ Download MP3",
                     data=audio_bytes,
@@ -170,5 +296,5 @@ def page_spotify_downloader():
             except Exception as e:
 
                 st.error(
-                    f"Gagal download: {e}"
+                    f"Gagal download lagu: {e}"
                 )
